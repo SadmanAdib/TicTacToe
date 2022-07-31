@@ -36,6 +36,7 @@ struct ContentView: View {
                                 .foregroundColor(.white)
                         }
                         .onTapGesture {
+                            if isSquareOccupied(in: moves, forIndex: item) { return }
                             moves[item] = Move(player: isHumanTurn ? .human : .computer, boardIndex: item)
                             isHumanTurn.toggle()
                         }
@@ -48,6 +49,10 @@ struct ContentView: View {
 
         }
     }
+}
+
+func isSquareOccupied(in moves: [Move?], forIndex index: Int) -> Bool {
+    return moves.contains(where: { $0?.boardIndex == index })
 }
 
 enum Player {
