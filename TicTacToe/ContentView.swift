@@ -14,7 +14,6 @@ struct ContentView: View {
                    GridItem(.flexible())]
     
     @State private var moves: [Move?] = Array(repeating: nil, count: 9)
-    @State private var isHumanTurn = true
     
     var body: some View {
         GeometryReader{ geometry in
@@ -22,7 +21,6 @@ struct ContentView: View {
                 Spacer()
                 
                 LazyVGrid(columns: columns, spacing: 5){
-                    
                     ForEach(0..<9){ item in
                         ZStack{
                             Circle()
@@ -37,8 +35,12 @@ struct ContentView: View {
                         }
                         .onTapGesture {
                             if isSquareOccupied(in: moves, forIndex: item) { return }
-                            moves[item] = Move(player: isHumanTurn ? .human : .computer, boardIndex: item)
-                            isHumanTurn.toggle()
+                            moves[item] = Move(player: .human, boardIndex: item)
+                            
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                let computerPosition = determineComputerMovePosition(moves: moves)
+                                moves[computerPosition] = Move(player: .computer, boardIndex: computerPosition)
+                            }
                         }
                     }
                 }
@@ -55,13 +57,23 @@ func isSquareOccupied(in moves: [Move?], forIndex index: Int) -> Bool {
     return moves.contains(where: { $0?.boardIndex == index })
 }
 
+func determineComputerMovePosition(moves: [Move?]) -> Int {
+    var movePosition = Int.random(in: 0..<9)
+    
+    while isSquareOccupied(in: moves, forIndex: movePosition){
+        movePosition = Int.random(in: 0..<9)
+    }
+    
+    return movePosition
+}
+
 enum Player {
     case human, computer
 }
 
 struct Move {
     let player: Player
-    let boardIndex: Int
+    let boardIndex: Int // it is where the player has made the move.
     
     var indicator: String {
         return player == .human ? "xmark" : "circle"
