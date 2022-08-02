@@ -39,10 +39,31 @@ struct ContentView: View {
                             moves[item] = Move(player: .human, boardIndex: item)
                             isGameboardDisabled = true
                             
+                            //check for win or draw
+                            if checkWinCondition(for: .human, in: moves) {
+                                print("Human Wins!")
+                                return
+                            }
+                            
+                            if checkForDraw(in: moves) {
+                                print("draw")
+                                return
+                            }
+                            
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 let computerPosition = determineComputerMovePosition(moves: moves)
                                 moves[computerPosition] = Move(player: .computer, boardIndex: computerPosition)
                                 isGameboardDisabled = false
+                                
+                                if checkWinCondition(for: .computer, in: moves) {
+                                    print("Computer Wins!")
+                                    return
+                                }
+                                
+                                if checkForDraw(in: moves) {
+                                    print("draw")
+                                    return
+                                }
                             }
                         }
                     }
@@ -68,6 +89,21 @@ func determineComputerMovePosition(moves: [Move?]) -> Int {
     }
     
     return movePosition
+}
+
+func checkWinCondition(for player: Player, in moves : [Move?]) -> Bool {
+    let winPattern: Set<Set<Int>> = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]]
+    
+    let playerMoves = moves.compactMap{$0}.filter {$0.player == player}
+    let playerPosition = Set(playerMoves.compactMap{$0.boardIndex})
+    
+    for pattern in winPattern where pattern.isSubset(of: playerPosition) { return true }
+
+    return false
+}
+
+func checkForDraw(in moves: [Move?]) -> Bool {
+    return moves.compactMap{$0}.count == 9
 }
 
 enum Player {
